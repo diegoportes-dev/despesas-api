@@ -1,0 +1,54 @@
+@baseUrl = http://localhost:5164
+@authToken = cole-seu-token-aqui
+
+### Lista despesas
+GET {{baseUrl}}/despesas?page=1&pageSize=10
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### Cria uma despesa
+# @name createDespesa
+POST {{baseUrl}}/despesas
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "dataDespesa": "24/10/2026 12:34:23",
+  "descricaoDespesa": "Compra de material de escritório",
+  "valorDespesa": 149.90,
+  "modalidadePagamento": "Cartão de crédito",
+  "categoriaDespesa": "Material de escritório"
+}
+
+@despesaId = {{createDespesa.response.body.data.id}}
+
+### Busca a despesa criada
+GET {{baseUrl}}/despesas/{{despesaId}}
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+### Substitui os dados da despesa
+PUT {{baseUrl}}/despesas/{{despesaId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "dataDespesa": "2026-10-23T12:00:00-03:00",
+  "descricaoDespesa": "Material de escritório mensal",
+  "valorDespesa": 159.90,
+  "modalidadePagamento": "PIX",
+  "categoriaDespesa": "Escritório"
+}
+
+### Atualiza parcialmente a categoria
+PATCH {{baseUrl}}/despesas/{{despesaId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "categoriaDespesa": "Despesas administrativas"
+}
+
+### Exclui a despesa criada
+DELETE {{baseUrl}}/despesas/{{despesaId}}
+Authorization: Bearer {{authToken}}

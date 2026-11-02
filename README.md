@@ -1,0 +1,132 @@
+# 🚀 AspNetCore Minimal API - CRUD
+
+Uma API Minimalista desenvolvida em ASP.NET Core para operações de CRUD (Create, Read, Update, Delete), utilizando SQLite como banco de dados local.
+
+## 🛠️ Tecnologias Utilizadas
+
+* **.NET 10.0** (SDK 10.0.300 / Runtime 10.0.8)
+* **ASP.NET Core Minimal APIs**
+* **Entity Framework Core**
+* **SQLite** (Banco de dados local em arquivo)
+* **Scalar** (Documentação interativa e execução das APIs)
+* **MailKit** (Envio robusto e assíncrono de e-mails via SMTP)
+* **BCrypt.Net-Next** (Criptografia segura de senhas com hashing)
+
+## 📦 Como Executar o Projeto
+
+Siga os passos abaixo para clonar e rodar o projeto localmente na sua máquina:
+
+### 1. Clonar o Repositório
+```bash
+git clone https://github.com
+cd AspNetCore
+```
+
+### 2. Restaurar as Dependências
+```bash
+dotnet restore
+```
+
+### 3. Atualizar a Estrutura do Banco de Dados (Migrations)
+Para aplicar as migrations pendentes, incluindo a criação da tabela de despesas, execute:
+
+```bash
+dotnet ef database update --context CrudContext
+```
+
+### 4. Configurar as Variáveis de Ambiente (`appsettings.json`)
+Antes de rodar a aplicação, abra o arquivo `appsettings.json` na raiz do projeto e configure as credenciais para o envio do link de recuperação de senha.
+
+#### 📧 Cenário A: Desenvolvimento Local (Mailtrap - Recomendado)
+Para testar o fluxo sem enviar e-mails reais e evitar bloqueios de IP, crie uma conta gratuita no [Mailtrap](https://mailtrap.io), acesse sua *Inbox* e copie as credenciais numéricas de SMTP:
+
+```json
+"EmailSettings": {
+  "SmtpServer": "sandbox.smtp.mailtrap.io",
+  "Port": 2525,
+  "SenderName": "Sistema de Teste",
+  "SenderEmail": "suporte@seudominio.com",
+  "Username": "SUO_CODIGO_NUMERICO", 
+  "Password": "SUA_SENHA_NUMERICA" 
+}
+```
+
+#### ✉️ Cenário B: Produção / Teste Real (Gmail)
+Caso queira disparar e-mails reais usando os servidores do Google, use a porta seguro TLS (`587`) e gere uma **Senha de App de 16 dígitos** no painel de segurança da sua Conta Google (a senha comum de login do e-mail será rejeitada):
+
+```json
+"EmailSettings": {
+  "SmtpServer": "://gmail.com",
+  "Port": 587,
+  "SenderName": "Seu App/Sistema",
+  "SenderEmail": "seu_usuario@gmail.com",
+  "Username": "seu_usuario@gmail.com", 
+  "Password": "abcd efgh ijkl mnop" 
+}
+```
+
+#### ⏱️ Ajustar Prazos de Expiração (`TimeOutSettings`)
+Defina os tempos limites do sistema em segundos para a validação dos tokens gerados:
+```json
+"TimeOutSettings" : {
+  "TokenResetSenha": 60,       // Tempo de vida do Token JWT gerado no login
+  "TokenResetExpiracao": 75    // Janela de validade do link de redefinição de senha
+}
+```
+
+### 5. Rodar a Aplicação
+```bash
+dotnet run
+```
+
+A API estará disponível no seguinte endereço local:
+* **`http://localhost:5164/`**
+
+### Analisar comprovantes com Gemini
+
+A rota `POST /despesas/analisar-comprovante` envia a imagem para a API Google Gemini. A API carrega automaticamente o arquivo `Api/.env` ao iniciar. Configure a chave neste arquivo (sem ponto e vírgula no final):
+
+```env
+GEMINI_API_KEY=sua-chave-do-Google-AI-Studio
+```
+
+Variáveis de ambiente já definidas no sistema têm prioridade sobre os valores do `.env`. Se preferir, configure a chave diretamente no ambiente antes de iniciar a API:
+
+```powershell
+$env:GEMINI_API_KEY = "sua-chave-do-Google-AI-Studio"
+dotnet run
+```
+
+Opcionalmente, selecione outro modelo compatível definindo `GEMINI_MODEL`. O padrão é `gemini-2.5-flash`.
+
+Envie a imagem como `multipart/form-data` no campo `receipt`. A resposta contém o rascunho extraído:
+
+```json
+{
+  "draft": {
+    "dataDespesa": "29/10/2026 18:08:23",
+    "descricaoDespesa": "Posto Ipiranga",
+    "valorDespesa": "150,00",
+    "modalidadePagamento": "Cartão de crédito",
+    "categoriaDespesa": "Transporte"
+  }
+}
+```
+
+São aceitas imagens JPEG, PNG ou WEBP de até 10 MB. A chave da API é lida do ambiente e enviada no cabeçalho, não deve ser adicionada ao código nem ao `appsettings.json`.
+
+## 🔐 Fluxo de Redefinição de Senha
+
+O sistema implementa uma arquitetura segura de recuperação de credenciais dividida em duas rotas:
+
+1. **`POST /login/esqueci-senha`**: O cliente envia o e-mail cadastrado. O sistema gera um Token criptográfico exclusivo (GUID) com prazo de expiração amarrado ao relógio do servidor, monta um e-mail com layout em HTML contendo um botão e dispara para o usuário através do serviço configurado.
+2. **`POST /login/resetar-senha`**: O frontend lê os parâmetros contidos na URL do link clicado pelo usuário e envia o token de validação junto com a nova senha digitada. O backend valida os limites do `TimeOutSettings` e, se aprovado, aplica o Hash seguro via **BCrypt** na nova credencial antes de atualizar o banco de dados.
+
+## 🔌 Documentação e Execução das APIs (Scalar)
+
+O projeto utiliza o **Scalar** para gerar automaticamente uma interface de documentação moderna, bonita e interativa. Por ela, você pode visualizar todos os endpoints disponíveis e testar as requisições diretamente do navegador.
+
+Para acessar a documentação com a aplicação rodando, abra o navegador e acesse:
+* **`http://localhost:5164/scalar/v1`**
+
+*(Nota: Você também pode testar os endpoints utilizando o arquivo `crud.http` integrado diretamente no VS Code se tiver a extensão REST Client instalada).*

@@ -1,0 +1,36 @@
+using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+using Crud.Data;
+
+public class UsuarioInputPostValidator : AbstractValidator<UsuarioInputPostDto>
+{
+    private readonly CrudContext _db;
+
+    public UsuarioInputPostValidator(CrudContext db)
+    {
+        _db = db;
+        
+        // 1. VALIDAÇÃO DE E-MAIL
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("O E-Mail do usuário é obrigatório.")
+            .EmailAddress().WithMessage("O E-Mail fornecido não é válido.")
+            .MaximumLength(100).WithMessage("O E-Mail do usuário não pode exceder 100 caracteres.")            
+            .MustAsync(async (email, cancellation) =>
+                !await _db.Usuarios.AnyAsync(u => u.Email == email, cancellation))
+            .WithMessage(x => $"O E-Mail {x.Email} fornecido já está em uso.");
+
+        // 2. VALIDAÇÃO DE SENHA (Complexidade padrão do seu projeto)
+        RuleFor(x => x.Senha)
+            .NotEmpty().WithMessage("A Senha do usuário é obrigatória.")
+            .Length(6, 8).WithMessage("A Senha do usuário deve ter entre 6 e 8 caracteres.")
+            .Matches(@"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{6,8}$")
+            .WithMessage("A senha deve conter pelo menos uma letra maiúscula, uma minúscula e um número.");
+
+        // 3. VALIDAÇÃO DE PERFIL
+        RuleFor(x => x.PerfilId)
+            .NotEmpty().WithMessage("O Perfil é obrigatório.")
+            .MustAsync(async (perfilId, cancellation) =>
+                await _db.Perfis.AnyAsync(p => p.Id == perfilId, cancellation))
+            .WithMessage("Perfil não encontrado.");
+    }
+}
