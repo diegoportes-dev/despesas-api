@@ -61,7 +61,8 @@ public class CrudContext() : DbContext
             // Leitura dinâmica do appsettings.json no terminal
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddEnvironmentVariables()
                 .Build();
 
             string connectionString = configuration.GetConnectionString("CentralConnection");

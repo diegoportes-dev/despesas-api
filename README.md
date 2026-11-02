@@ -82,6 +82,24 @@ dotnet run
 A API estará disponível no seguinte endereço local:
 * **`http://localhost:5164/`**
 
+## Deploy no Render com Docker
+
+Crie um serviço **Web Service** no Render conectado ao repositório e configure:
+
+- **Root Directory:** `Api`
+- **Runtime:** Docker
+- **Dockerfile Path:** `./Dockerfile`
+
+Configure as variáveis de ambiente no painel do Render:
+
+- `JwtSettings__ChaveSecreta`: chave secreta com pelo menos 32 caracteres.
+- `ConnectionStrings__CentralConnection`: connection string do banco MySQL gerenciado.
+- `ASPNETCORE_FORWARDEDHEADERS_ENABLED`: `true`, para respeitar HTTPS atrás do proxy do Render.
+- `EmailSettings__SmtpServer`, `EmailSettings__Port`, `EmailSettings__SenderName`, `EmailSettings__SenderEmail`, `EmailSettings__Username` e `EmailSettings__Password`, se for usar envio de e-mail.
+- `GEMINI_API_KEY`, se for usar análise de comprovantes.
+
+O container escuta a porta definida pelo Render (`PORT`, com fallback para `10000`). Os arquivos `appsettings*.json` não são incluídos na imagem; configure no Render as opções necessárias, sem colocar credenciais no repositório.
+
 ### Analisar comprovantes com Gemini
 
 A rota `POST /despesas/analisar-comprovante` envia a imagem para a API Google Gemini. A API carrega automaticamente o arquivo `Api/.env` ao iniciar. Configure a chave neste arquivo (sem ponto e vírgula no final):
